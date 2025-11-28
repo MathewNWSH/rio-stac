@@ -59,7 +59,7 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     ```json
     {
-        "proj:epsg": 3857,
+        "proj:code": "EPSG:3857",
         "proj:geometry": {"type": "Polygon", "coordinates": [...]},
         "proj:bbox": [...],
         "proj:shape": [8192, 8192],
@@ -77,20 +77,20 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
     link: https://github.com/stac-extensions/raster
 
     ```json
-    "raster:bands": [
+    "bands": [
       {
-        "sampling": "point",
+        "raster:sampling": "point",
         "data_type": "uint16",
-        "scale": 1,
-        "offset": 0,
+        "raster:scale": 1,
+        "raster:offset": 0,
         "statistics": {
           "mean": 2107.524612053134,
           "minimum": 1,
           "maximum": 7872,
-          "stdev": 2271.0065537857326,
+          "stddev": 2271.0065537857326,
           "valid_percent": 9.564764936336924e-05
         },
-        "histogram": {
+        "raster:histogram": {
           "count": 11,
           "min": 1,
           "max": 7872,
@@ -115,18 +115,21 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     Asset's bands
     ```json
-    "eo:bands": [
+    "bands": [
       {
         "name": "b1",
-        "description": "red"
+        "description": "red",
+        "eo:common_name": "red"
       },
       {
-        "name": "b2"
-        "description": "green"
+        "name": "b2",
+        "description": "green",
+        "eo:common_name": "green"
       },
       {
-        "name": "b3"
-        "description": "blue"
+        "name": "b3",
+        "description": "blue",
+        "eo:common_name": "blue"
       }
     ],
     ```
@@ -183,10 +186,48 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 // rio stac tests/fixtures/dataset_cog.tif | jq
 {
   "type": "Feature",
-  "stac_version": "1.0.0",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/eo/v2.0.0/schema.json"
+  ],
   "id": "dataset_cog.tif",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ],
+        [
+          -52.91627525610924,
+          72.22979795551834
+        ],
+        [
+          -52.301598718454485,
+          74.61378388950398
+        ],
+        [
+          -61.28762442711404,
+          74.62204314252978
+        ],
+        [
+          -60.72634617297825,
+          72.23689137791739
+        ]
+      ]
+    ]
+  },
+  "bbox": [
+    -61.28762442711404,
+    72.22979795551834,
+    -52.301598718454485,
+    74.62204314252978
+  ],
   "properties": {
-    "proj:epsg": 32621,
+    "proj:code": "EPSG:32621",
     "proj:geometry": {
       "type": "Polygon",
       "coordinates": [
@@ -235,125 +276,73 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
       0.0,
       1.0
     ],
-    "proj:projjson": {
-      "$schema": "https://proj.org/schemas/v0.4/projjson.schema.json",
-      "type": "ProjectedCRS",
-      "name": "WGS 84 / UTM zone 21N",
-      "base_crs": {
-        "name": "WGS 84",
-        "datum": {
-          "type": "GeodeticReferenceFrame",
-          "name": "World Geodetic System 1984",
-          "ellipsoid": {
-            "name": "WGS 84",
-            "semi_major_axis": 6378137,
-            "inverse_flattening": 298.257223563
-          }
-        },
-        "coordinate_system": {
-          "subtype": "ellipsoidal",
-          "axis": [
-            {
-              "name": "Geodetic latitude",
-              "abbreviation": "Lat",
-              "direction": "north",
-              "unit": "degree"
-            },
-            {
-              "name": "Geodetic longitude",
-              "abbreviation": "Lon",
-              "direction": "east",
-              "unit": "degree"
-            }
-          ]
-        },
-        "id": {
-          "authority": "EPSG",
-          "code": 4326
-        }
-      },
-      "conversion": {
-        "name": "UTM zone 21N",
-        "method": {
-          "name": "Transverse Mercator",
-          "id": {
-            "authority": "EPSG",
-            "code": 9807
-          }
-        },
-        "parameters": [
-          {
-            "name": "Latitude of natural origin",
-            "value": 0,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8801
-            }
-          },
-          {
-            "name": "Longitude of natural origin",
-            "value": -57,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8802
-            }
-          },
-          {
-            "name": "Scale factor at natural origin",
-            "value": 0.9996,
-            "unit": "unity",
-            "id": {
-              "authority": "EPSG",
-              "code": 8805
-            }
-          },
-          {
-            "name": "False easting",
-            "value": 500000,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8806
-            }
-          },
-          {
-            "name": "False northing",
-            "value": 0,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8807
-            }
-          }
-        ]
-      },
-      "coordinate_system": {
-        "subtype": "Cartesian",
-        "axis": [
-          {
-            "name": "Easting",
-            "abbreviation": "",
-            "direction": "east",
-            "unit": "metre"
-          },
-          {
-            "name": "Northing",
-            "abbreviation": "",
-            "direction": "north",
-            "unit": "metre"
-          }
-        ]
-      },
-      "id": {
-        "authority": "EPSG",
-        "code": 32621
-      }
-    },
-    "proj:wkt2": "PROJCS[\"WGS 84 / UTM zone 21N\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-57],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"32621\"]]",
-    "datetime": "2023-12-08T09:30:38.153261Z"
+    "datetime": "2025-11-28T13:12:58.968562Z"
   },
+  "links": [],
+  "assets": {
+    "asset": {
+      "href": "tests/fixtures/dataset_cog.tif",
+      "type": "image/tiff; application=geotiff",
+      "bands": [
+        {
+          "name": "b1",
+          "description": "gray",
+          "eo:common_name": "pan",
+          "data_type": "uint16",
+          "raster:scale": 1.0,
+          "raster:offset": 0.0,
+          "raster:sampling": "point",
+          "statistics": {
+            "mean": 2107.524612053134,
+            "minimum": 1,
+            "maximum": 7872,
+            "stddev": 2271.006553785732,
+            "valid_percent": 9.564764936336924e-05
+          },
+          "raster:histogram": {
+            "count": 11,
+            "min": 1.0,
+            "max": 7872.0,
+            "buckets": [
+              503460,
+              0,
+              0,
+              161792,
+              283094,
+              0,
+              0,
+              0,
+              87727,
+              9431
+            ]
+          }
+        }
+      ],
+      "roles": []
+    }
+  }
+}
+```
+
+
+```json
+// rio stac S-2_20200422_COG.tif \
+//   -d 2020-04-22 \
+//   -c myprivatecollection \
+//   -p comments:name=myfile \
+//   --id COG \
+//   -n mosaic \
+//   --asset-href https://somewhere.overtherainbow.io/S-2_20200422_COG.tif \
+//   --asset-mediatype COG | jq
+{
+  "type": "Feature",
+  "stac_version": "1.1.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+    "https://stac-extensions.github.io/eo/v2.0.0/schema.json"
+  ],
+  "id": "COG",
   "geometry": {
     "type": "Polygon",
     "coordinates": [
@@ -381,24 +370,93 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
       ]
     ]
   },
-  "links": [],
+  "bbox": [
+    -61.28762442711404,
+    72.22979795551834,
+    -52.301598718454485,
+    74.62204314252978
+  ],
+  "properties": {
+    "comments:name": "myfile",
+    "proj:code": "EPSG:32621",
+    "proj:geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            373185.0,
+            8019284.949381611
+          ],
+          [
+            639014.9492102272,
+            8019284.949381611
+          ],
+          [
+            639014.9492102272,
+            8286015.0
+          ],
+          [
+            373185.0,
+            8286015.0
+          ],
+          [
+            373185.0,
+            8019284.949381611
+          ]
+        ]
+      ]
+    },
+    "proj:bbox": [
+      373185.0,
+      8019284.949381611,
+      639014.9492102272,
+      8286015.0
+    ],
+    "proj:shape": [
+      2667,
+      2658
+    ],
+    "proj:transform": [
+      100.01126757344893,
+      0.0,
+      373185.0,
+      0.0,
+      -100.01126757344893,
+      8286015.0,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "datetime": "2020-04-22T00:00:00Z"
+  },
+  "links": [
+    {
+      "rel": "collection",
+      "href": "myprivatecollection",
+      "type": "application/json"
+    }
+  ],
   "assets": {
-    "asset": {
-      "href": "/Users/vincentsarago/Dev/DevSeed/rio-stac/tests/fixtures/dataset_cog.tif",
-      "raster:bands": [
+    "mosaic": {
+      "href": "https://somewhere.overtherainbow.io/S-2_20200422_COG.tif",
+      "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+      "bands": [
         {
+          "name": "b1",
+          "description": "gray",
+          "eo:common_name": "pan",
           "data_type": "uint16",
-          "scale": 1.0,
-          "offset": 0.0,
-          "sampling": "point",
+          "raster:scale": 1.0,
+          "raster:offset": 0.0,
+          "raster:sampling": "point",
           "statistics": {
             "mean": 2107.524612053134,
             "minimum": 1,
             "maximum": 7872,
-            "stddev": 2271.0065537857326,
-            "valid_percent": 0.00009564764936336924
+            "stddev": 2271.006553785732,
+            "valid_percent": 9.564764936336924e-05
           },
-          "histogram": {
+          "raster:histogram": {
             "count": 11,
             "min": 1.0,
             "max": 7872.0,
@@ -417,373 +475,13 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
           }
         }
       ],
-      "eo:bands": [
-        {
-          "name": "b1",
-          "description": "gray"
-        }
-      ],
       "roles": []
     }
   },
-  "bbox": [
-    -61.28762442711404,
-    72.22979795551834,
-    -52.301598718454485,
-    74.62204314252978
-  ],
-  "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
-  ]
-}
-```
-
-```json
-// rio stac S-2_20200422_COG.tif \
-//   -d 2020-04-22 \
-//   -c myprivatecollection \
-//   -p comments:name=myfile \
-//   --id COG \
-//   -n mosaic \
-//   --asset-href https://somewhere.overtherainbow.io/S-2_20200422_COG.tif \
-//   --asset-mediatype COG | jq
-// {
-  "type": "Feature",
-  "stac_version": "1.0.0",
-  "id": "COG",
-  "properties": {
-    "comments:name": "myfile",
-    "proj:epsg": 32632,
-    "proj:geometry": {
-      "type": "Polygon",
-      "coordinates": [
-        [
-          [
-            342765.0,
-            5682885.0
-          ],
-          [
-            674215.0,
-            5682885.0
-          ],
-          [
-            674215.0,
-            5971585.0
-          ],
-          [
-            342765.0,
-            5971585.0
-          ],
-          [
-            342765.0,
-            5682885.0
-          ]
-        ]
-      ]
-    },
-    "proj:bbox": [
-      342765.0,
-      5682885.0,
-      674215.0,
-      5971585.0
-    ],
-    "proj:shape": [
-      28870,
-      33145
-    ],
-    "proj:transform": [
-      10.0,
-      0.0,
-      342765.0,
-      0.0,
-      -10.0,
-      5971585.0,
-      0.0,
-      0.0,
-      1.0
-    ],
-    "proj:projjson": {
-      "$schema": "https://proj.org/schemas/v0.4/projjson.schema.json",
-      "type": "ProjectedCRS",
-      "name": "WGS 84 / UTM zone 32N",
-      "base_crs": {
-        "name": "WGS 84",
-        "datum": {
-          "type": "GeodeticReferenceFrame",
-          "name": "World Geodetic System 1984",
-          "ellipsoid": {
-            "name": "WGS 84",
-            "semi_major_axis": 6378137,
-            "inverse_flattening": 298.257223563
-          }
-        },
-        "coordinate_system": {
-          "subtype": "ellipsoidal",
-          "axis": [
-            {
-              "name": "Geodetic latitude",
-              "abbreviation": "Lat",
-              "direction": "north",
-              "unit": "degree"
-            },
-            {
-              "name": "Geodetic longitude",
-              "abbreviation": "Lon",
-              "direction": "east",
-              "unit": "degree"
-            }
-          ]
-        },
-        "id": {
-          "authority": "EPSG",
-          "code": 4326
-        }
-      },
-      "conversion": {
-        "name": "UTM zone 32N",
-        "method": {
-          "name": "Transverse Mercator",
-          "id": {
-            "authority": "EPSG",
-            "code": 9807
-          }
-        },
-        "parameters": [
-          {
-            "name": "Latitude of natural origin",
-            "value": 0,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8801
-            }
-          },
-          {
-            "name": "Longitude of natural origin",
-            "value": 9,
-            "unit": "degree",
-            "id": {
-              "authority": "EPSG",
-              "code": 8802
-            }
-          },
-          {
-            "name": "Scale factor at natural origin",
-            "value": 0.9996,
-            "unit": "unity",
-            "id": {
-              "authority": "EPSG",
-              "code": 8805
-            }
-          },
-          {
-            "name": "False easting",
-            "value": 500000,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8806
-            }
-          },
-          {
-            "name": "False northing",
-            "value": 0,
-            "unit": "metre",
-            "id": {
-              "authority": "EPSG",
-              "code": 8807
-            }
-          }
-        ]
-      },
-      "coordinate_system": {
-        "subtype": "Cartesian",
-        "axis": [
-          {
-            "name": "Easting",
-            "abbreviation": "",
-            "direction": "east",
-            "unit": "metre"
-          },
-          {
-            "name": "Northing",
-            "abbreviation": "",
-            "direction": "north",
-            "unit": "metre"
-          }
-        ]
-      },
-      "id": {
-        "authority": "EPSG",
-        "code": 32632
-      }
-    },
-    "proj:wkt2": "PROJCS[\"WGS 84 / UTM zone 32N\",GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",9],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"32632\"]]",
-    "datetime": "2020-04-22T00:00:00Z"
-  },
-  "geometry": {
-    "type": "Polygon",
-    "coordinates": [
-      [
-        [
-          6.745709371926977,
-          51.27558086786243
-        ],
-        [
-          11.497498156319669,
-          51.270642883468916
-        ],
-        [
-          11.64938680867944,
-          53.86346627759
-        ],
-        [
-          6.608576517072109,
-          53.868886713141336
-        ],
-        [
-          6.745709371926977,
-          51.27558086786243
-        ]
-      ]
-    ]
-  },
-  "links": [
-    {
-      "rel": "collection",
-      "href": "myprivatecollection",
-      "type": "application/json"
-    }
-  ],
-  "assets": {
-    "mosaic": {
-      "href": "https://somewhere.overtherainbow.io/S-2_20200422_COG.tif",
-      "type": "image/tiff; application=geotiff; profile=cloud-optimized",
-      "raster:bands": [
-        {
-          "data_type": "uint8",
-          "scale": 1.0,
-          "offset": 0.0,
-          "sampling": "area",
-          "statistics": {
-            "mean": 70.14680057905686,
-            "minimum": 0,
-            "maximum": 255,
-            "stddev": 36.47197403839734,
-            "valid_percent": 49.83785997057175
-          },
-          "histogram": {
-            "count": 11,
-            "min": 0.0,
-            "max": 255.0,
-            "buckets": [
-              21135,
-              129816,
-              152194,
-              76363,
-              39423,
-              20046,
-              10272,
-              3285,
-              1115,
-              1574
-            ]
-          }
-        },
-        {
-          "data_type": "uint8",
-          "scale": 1.0,
-          "offset": 0.0,
-          "sampling": "area",
-          "statistics": {
-            "mean": 70.72913714816694,
-            "minimum": 0,
-            "maximum": 255,
-            "stddev": 34.031434334640124,
-            "valid_percent": 49.83785997057175
-          },
-          "histogram": {
-            "count": 11,
-            "min": 0.0,
-            "max": 255.0,
-            "buckets": [
-              14829,
-              116732,
-              171933,
-              81023,
-              38736,
-              18977,
-              8362,
-              2259,
-              918,
-              1454
-            ]
-          }
-        },
-        {
-          "data_type": "uint8",
-          "scale": 1.0,
-          "offset": 0.0,
-          "sampling": "area",
-          "statistics": {
-            "mean": 47.96346845392258,
-            "minimum": 0,
-            "maximum": 255,
-            "stddev": 32.447819767110225,
-            "valid_percent": 49.83785997057175
-          },
-          "histogram": {
-            "count": 11,
-            "min": 0.0,
-            "max": 255.0,
-            "buckets": [
-              110478,
-              177673,
-              93767,
-              41101,
-              20804,
-              7117,
-              1939,
-              856,
-              829,
-              659
-            ]
-          }
-        }
-      ],
-      "eo:bands": [
-        {
-          "name": "b1",
-          "description": "red"
-        },
-        {
-          "name": "b2",
-          "description": "green"
-        },
-        {
-          "name": "b3",
-          "description": "blue"
-        }
-      ],
-      "roles": []
-    }
-  },
-  "bbox": [
-    6.608576517072109,
-    51.270642883468916,
-    11.64938680867944,
-    53.868886713141336
-  ],
-  "stac_extensions": [
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
-  ],
   "collection": "myprivatecollection"
 }
 ```
+
 
 
 # API

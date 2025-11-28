@@ -23,14 +23,14 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]["href"] == src_path
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-            "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-            "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+            "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+            "https://stac-extensions.github.io/eo/v2.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
-        assert "proj:epsg" in stac_item["properties"]
-        assert "raster:bands" in stac_item["assets"]["asset"]
-        assert "eo:bands" in stac_item["assets"]["asset"]
+        assert "proj:code" in stac_item["properties"]
+        assert "bands" in stac_item["assets"]["asset"]
+        assert stac_item["assets"]["asset"]["bands"][0]["eo:common_name"]
 
         result = runner.invoke(
             stac,
@@ -104,13 +104,13 @@ def test_rio_stac_cli(runner):
         assert stac_item["assets"]["asset"]
         assert stac_item["links"] == []
         assert stac_item["stac_extensions"] == [
-            "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-            "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-            "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+            "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+            "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+            "https://stac-extensions.github.io/eo/v2.0.0/schema.json",
         ]
         assert "datetime" in stac_item["properties"]
-        assert "proj:epsg" in stac_item["properties"]
-        assert "raster:bands" in stac_item["assets"]["asset"]
+        assert "proj:code" in stac_item["properties"]
+        assert "bands" in stac_item["assets"]["asset"]
 
         with runner.isolated_filesystem():
             src_path = os.path.join(PREFIX, "dataset_nocrs.tif")
@@ -123,12 +123,11 @@ def test_rio_stac_cli(runner):
             assert stac_item["assets"]["asset"]["href"] == src_path
             assert stac_item["links"] == []
             assert stac_item["stac_extensions"] == [
-                "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-                "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
-                "https://stac-extensions.github.io/eo/v1.1.0/schema.json",
+                "https://stac-extensions.github.io/projection/v2.0.0/schema.json",
+                "https://stac-extensions.github.io/raster/v2.0.0/schema.json",
+                "https://stac-extensions.github.io/eo/v2.0.0/schema.json",
             ]
             assert "datetime" in stac_item["properties"]
-            assert "proj:epsg" in stac_item["properties"]
+            assert "proj:code" in stac_item["properties"]
             assert "proj:projjson" not in stac_item["properties"]
-            assert "raster:bands" in stac_item["assets"]["asset"]
-            assert "eo:bands" in stac_item["assets"]["asset"]
+            assert "bands" in stac_item["assets"]["asset"]
