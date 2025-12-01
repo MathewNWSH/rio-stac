@@ -95,6 +95,64 @@ def test_rio_stac_cli(runner):
         assert result.exception
         assert result.exit_code == 2
 
+        result = runner.invoke(
+            stac,
+            [
+                src_path,
+                "--with-private-data",
+                "--property",
+                '_private={"foo":"bar"}',
+            ],
+        )
+        assert not result.exception
+        assert result.exit_code == 0
+        stac_item = json.loads(result.output)
+        assert isinstance(stac_item["properties"]["_private"], dict)
+        assert stac_item["properties"]["_private"]["foo"] == "bar"
+        assert stac_item["properties"]["_private"]["hidden"] is True
+
+        result = runner.invoke(
+            stac,
+            [
+                src_path,
+                "--with-private-data",
+                "--property",
+                "_private={hidden: true}",
+            ],
+        )
+        assert not result.exception
+        assert result.exit_code == 0
+        stac_item = json.loads(result.output)
+        assert stac_item["properties"]["_private"]["hidden"] is True
+
+        result = runner.invoke(
+            stac,
+            [
+                src_path,
+                "--with-private-data",
+                "-P",
+                "hidden=true",
+                "-P",
+                "note='abc'",
+            ],
+        )
+        assert not result.exception
+        assert result.exit_code == 0
+        stac_item = json.loads(result.output)
+        assert stac_item["properties"]["_private"]["hidden"] is True
+        assert stac_item["properties"]["_private"]["note"] == "abc"
+
+        result = runner.invoke(
+            stac,
+            [
+                src_path,
+                "-P",
+                "hidden=true",
+            ],
+        )
+        assert result.exception
+        assert result.exit_code == 2
+
         result = runner.invoke(stac, [src_path, "-o", "item.json"])
         assert not result.exception
         assert result.exit_code == 0

@@ -375,6 +375,7 @@ def create_stac_item(
     with_proj: bool = False,
     with_raster: bool = False,
     with_eo: bool = False,
+    with_private: bool = False,
     raster_max_size: int = 1024,
     geom_densify_pts: int = 0,
     geom_precision: int = -1,
@@ -400,6 +401,7 @@ def create_stac_item(
         with_proj (bool): Add the `projection` extension and properties (default to False).
         with_raster (bool): Add the `raster` extension and properties (default to False).
         with_eo (bool): Add the `eo` extension and properties (default to False).
+        with_private (bool): Add the `_pivate` entry (default to False).
         raster_max_size (int): Limit array size from which to get the raster statistics. Defaults to 1024.
         geom_densify_pts (int): Number of points to add to each edge to account for nonlinear edges transformation (Note: GDAL uses 21).
         geom_precision (int): If >= 0, geometry coordinates will be rounded to this number of decimal.
@@ -522,6 +524,16 @@ def create_stac_item(
         datetime=input_datetime,
         properties=properties,
     )
+
+    if with_private:
+        private_data = properties.get("_private")
+        if private_data is None:
+            private_data = {}
+        if not isinstance(private_data, dict):
+            raise ValueError("The `_private` property must be a JSON object when set.")
+
+        private_data.setdefault("hidden", True)
+        properties["_private"] = private_data
 
     # if we add a collection we MUST add a link
     if collection:

@@ -1,6 +1,7 @@
 """rio_stac.scripts.cli."""
 
 import json
+import re
 
 import click
 import rasterio
@@ -11,6 +12,27 @@ from rasterio.rio import options
 from rio_stac import create_stac_item
 
 
+_UNQUOTED_KEY_RE = re.compile(r'(?P<lead>[{,]\s*)(?P<key>[A-Za-z_][A-Za-z0-9_-]*)\s*:')
+
+
+def _parse_jsonish(value: str):
+    """Try to parse JSON, falling back to quoting unquoted keys."""
+    stripped = value.strip()
+    candidates = [stripped, stripped.replace("'", '"')]
+    if stripped.startswith("{") or stripped.startswith("["):
+        candidates.append(
+            _UNQUOTED_KEY_RE.sub(lambda m: f'{m.group("lead")}"{m.group("key")}":', stripped)
+        )
+
+    for candidate in candidates:
+        try:
+            return json.loads(candidate)
+        except json.JSONDecodeError:
+            continue
+
+    return value
+
+
 def _cb_key_val(ctx, param, value):
     if not value:
         return {}
@@ -18,12 +40,11 @@ def _cb_key_val(ctx, param, value):
         out = {}
         for pair in value:
             if "=" not in pair:
-                raise click.BadParameter(
-                    "Invalid syntax for KEY=VAL arg: {}".format(pair)
-                )
+                raise click.BadParameter(f"Invalid syntax for KEY=VAL arg: {pair}")
             else:
                 k, v = pair.split("=", 1)
-                out[k] = v
+                parsed = _parse_jsonish(v)
+                out[k] = parsed
         return out
 
 
@@ -53,7 +74,15 @@ def _cb_key_val(ctx, param, value):
     metavar="NAME=VALUE",
     multiple=True,
     callback=_cb_key_val,
-    help="Additional property to add.",
+    help="Additional property to add. JSON values allowed for nested data.",
+)
+@click.option(
+    "--private-property",
+    "-P",
+    metavar="NAME=VALUE",
+    multiple=True,
+    callback=_cb_key_val,
+    help="Additional property to add under '_private' without JSON braces.",
 )
 @click.option("--id", type=str, help="Item id.")
 @click.option(
@@ -89,6 +118,13 @@ def _cb_key_val(ctx, param, value):
     show_default=True,
 )
 @click.option(
+    "--with-private-data/--without-private-data",
+    "with_private",
+    default=False,
+    help="Add the '_private' entry to output item.",
+    show_default=False,
+)
+@click.option(
     "--max-raster-size",
     type=int,
     default=1024,
@@ -122,6 +158,7 @@ def stac(
     collection,
     collection_url,
     property,
+    private_property,
     id,
     asset_name,
     asset_href,
@@ -129,6 +166,7 @@ def stac(
     with_proj,
     with_raster,
     with_eo,
+    with_private,
     max_raster_size,
     densify_geom,
     geom_precision,
@@ -137,7 +175,24 @@ def stac(
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
+    private_property = private_property or {}
     densify_geom = densify_geom or 0
+
+    if "_private" in property and not isinstance(property["_private"], dict):
+        raise click.BadParameter("When provided, '_private' must be a JSON object.")
+
+    if private_property and not with_private:
+        raise click.BadParameter(
+            "Using --private-property requires --with-private-data to be enabled."
+        )
+
+    if with_private:
+        base_private = property.get("_private") or {}
+        if not isinstance(base_private, dict):
+            raise click.BadParameter("When provided, '_private' must be a JSON object.")
+        if private_property:
+            base_private = {**base_private, **private_property}
+        property["_private"] = base_private
 
     if input_datetime:
         if "/" in input_datetime:
@@ -168,6 +223,7 @@ def stac(
             with_proj=with_proj,
             with_raster=with_raster,
             with_eo=with_eo,
+            with_private=with_private,
             raster_max_size=max_raster_size,
             geom_densify_pts=densify_geom,
             geom_precision=geom_precision,

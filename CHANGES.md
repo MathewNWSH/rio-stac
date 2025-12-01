@@ -2,6 +2,8 @@
 
 - update projection/raster/eo extensions to `v2.0.0` and emit combined `bands` metadata
 - replace `proj:epsg` with `proj:code` to align with Projection extension 2.0.0
+- parse JSON values passed via `--property` (e.g. `_private`) and merge them when adding private data; accept lenient JSON with unquoted keys
+- add `--private-property/-P` to set `_private` entries without JSON braces and coerce JSON literals (e.g. `hidden=true`); requires `--with-private-data`
 
 ## 0.12.0 (2025-09-17)
 

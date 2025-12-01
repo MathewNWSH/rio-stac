@@ -17,7 +17,8 @@ Options:
 -e, --extension TEXT                STAC extensions the Item implements (default is set to ["proj"]). Multiple allowed (e.g. `-e extensionUrl1 -e extensionUrl2`).
   -c, --collection TEXT             The Collection ID that this item belongs to.
   --collection-url TEXT             Link to the STAC Collection.
-  -p, --property NAME=VALUE         Additional property to add (e.g `-p myprops=1`). Multiple allowed.
+  -p, --property NAME=VALUE         Additional property to add (e.g `-p myprops=1` or `-p _private={"foo":"bar"}`). Multiple allowed.
+  -P, --private-property NAME=VALUE Additional property to add under '_private' (requires --with-private-data, e.g `-P hidden=true`). Multiple allowed.
   --id TEXT                         Item id.
   -n, --asset-name TEXT             Asset name.
   --asset-href TEXT                 Overwrite asset href.
@@ -25,6 +26,8 @@ Options:
   --with-proj / --without-proj      Add the 'projection' extension and properties (default to True).
   --with-raster / --without-raster  Add the 'raster' extension and properties (default to True).
   --with-eo / --without-eo          Add the 'eo' extension and properties (default to True).
+  --with-private-data / --without-private-data
+                                    Add the '_private' entry to output item.
   --max-raster-size INTEGER         Limit array size from which to get the raster statistics (default to 1024).
   --densify-geom INTEGER            Densifies the number of points on each edges of the polygon geometry to account for non-linear transformation.
   --geom-precision INTEGER          Round geometry coordinates to this number of decimal. By default, coordinates will not be rounded
@@ -148,7 +151,11 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
 - **properties** (-p, --property)
 
-    You can add multiple properties to the item using `-p {KEY}={VALUE}` notation. This option can be set multiple times.
+    You can add multiple properties to the item using `-p {KEY}={VALUE}` notation. This option can be set multiple times. If the value is valid JSON (object or array), it will be parsed so you can pass nested data, e.g. `-p '_private={"foo":"bar"}'` when combining with `--with-private-data`. Lenient JSON (unquoted keys) such as `-p _private={hidden:true}` is also accepted.
+
+- **private properties** (-P, --private-property)
+
+    Shortcut for adding entries under `_private` without building a JSON object. Requires `--with-private-data` and can be set multiple times (e.g. `--with-private-data -P hidden=true -P note='abc'`).
 
 - **id** (--id)
 
