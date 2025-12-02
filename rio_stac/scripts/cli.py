@@ -1,6 +1,7 @@
 """rio_stac.scripts.cli."""
 
 import json
+import os
 import re
 
 import click
@@ -9,7 +10,7 @@ from pystac import MediaType
 from pystac.utils import datetime_to_str, str_to_datetime
 from rasterio.rio import options
 
-from rio_stac import create_stac_item
+from rio_stac import build_stac_assets, create_stac_asset, create_stac_item
 
 
 _UNQUOTED_KEY_RE = re.compile(r'(?P<lead>[{,]\s*)(?P<key>[A-Za-z_][A-Za-z0-9_-]*)\s*:')
@@ -151,6 +152,19 @@ def _cb_key_val(ctx, param, value):
     callback=options._cb_key_val,
     help="GDAL configuration options.",
 )
+@click.option(
+    "--recursive",
+    "-r",
+    is_flag=True,
+    default=False,
+    help="Process input directory recursively.",
+)
+@click.option(
+    "--pattern",
+    type=str,
+    multiple=True,
+    help="Glob pattern to filter files when using --recursive.",
+)
 def stac(
     input,
     input_datetime,
@@ -172,6 +186,8 @@ def stac(
     geom_precision,
     output,
     config,
+    recursive,
+    pattern,
 ):
     """Rasterio STAC plugin: Create a STAC Item for raster dataset."""
     property = property or {}
@@ -209,25 +225,96 @@ def stac(
     extensions = [e for e in extension if e]
 
     with rasterio.Env(**config):
-        item = create_stac_item(
-            input,
-            input_datetime=input_datetime,
-            extensions=extensions,
-            collection=collection,
-            collection_url=collection_url,
-            properties=property,
-            id=id,
-            asset_name=asset_name,
-            asset_href=asset_href,
-            asset_media_type=asset_mediatype,
-            with_proj=with_proj,
-            with_raster=with_raster,
-            with_eo=with_eo,
-            with_private=with_private,
-            raster_max_size=max_raster_size,
-            geom_densify_pts=densify_geom,
-            geom_precision=geom_precision,
-        )
+        if recursive:
+            if not os.path.isdir(input):
+                raise click.BadParameter("Input must be a directory when using --recursive.")
+
+            assets = build_stac_assets(
+                directory=input,
+                patterns=list(pattern) if pattern else None,
+                asset_media_type=asset_mediatype,
+                with_raster=with_raster,
+                with_eo=with_eo,
+                raster_max_size=max_raster_size,
+                histogram_bins=10,  # Default
+            )
+
+            if not assets:
+                raise click.ClickException("No valid files found in directory matching criteria.")
+
+            # Determine source for Item geometry/bbox
+            source = None
+            # Prefer a "data" asset as source
+            for asset in assets.values():
+                if "data" in (asset.roles or []):
+                    # Re-construct full path for source opening
+                    # asset.href is relative (basename)
+                    source = os.path.join(input, asset.href)
+                    break
+            
+            # Fallback to any asset if no data role found (e.g. only thumbnails?)
+            # Or fallback to first found
+            if not source and assets:
+                # Pick the first one that is likely a raster (not metadata)
+                for asset in assets.values():
+                    if "metadata" not in (asset.roles or []):
+                         source = os.path.join(input, asset.href)
+                         break
+            
+            if not source:
+                 raise click.ClickException("No valid raster asset found to derive Item geometry.")
+
+            if not id:
+                id = os.path.basename(input.rstrip(os.sep))
+
+            item = create_stac_item(
+                source,
+                input_datetime=input_datetime,
+                extensions=extensions,
+                collection=collection,
+                collection_url=collection_url,
+                properties=property,
+                id=id,
+                assets=assets,
+                asset_name=asset_name,
+                asset_href=asset_href,
+                asset_media_type=asset_mediatype,
+                with_proj=with_proj,
+                with_raster=with_raster,
+                with_eo=with_eo,
+                with_private=with_private,
+                raster_max_size=max_raster_size,
+                geom_densify_pts=densify_geom,
+                geom_precision=geom_precision,
+            )
+
+        else:
+            try:
+                item = create_stac_item(
+                    input,
+                    input_datetime=input_datetime,
+                    extensions=extensions,
+                    collection=collection,
+                    collection_url=collection_url,
+                    properties=property,
+                    id=id,
+                    asset_name=asset_name,
+                    asset_href=asset_href,
+                    asset_media_type=asset_mediatype,
+                    with_proj=with_proj,
+                    with_raster=with_raster,
+                    with_eo=with_eo,
+                    with_private=with_private,
+                    raster_max_size=max_raster_size,
+                    geom_densify_pts=densify_geom,
+                    geom_precision=geom_precision,
+                )
+            except rasterio.errors.RasterioIOError:
+                if os.path.isdir(input):
+                    raise click.ClickException(
+                        f"Input '{input}' is a directory. Did you mean to use `--recursive`?"
+                    )
+                raise
 
     if output:
         with open(output, "w") as f:

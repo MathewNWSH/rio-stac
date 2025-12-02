@@ -193,6 +193,19 @@ $ pip install git+http://github.com/developmentseed/rio-stac
 
 See https://developmentseed.org/rio-stac/intro/ for more.
 
+### Directory Input Example
+
+`rio-stac` can also process a directory of files to create a single STAC Item with multiple assets using the `--recursive` flag.
+
+```bash
+$ rio stac /path/to/directory --recursive --pattern "*.tif" --pattern "*.json"
+```
+
+-   The directory name becomes the Item ID.
+-   `.tif` files are added as data assets.
+-   `.json` files are added as metadata assets.
+-   3-band non-georeferenced images are auto-detected as thumbnails.
+
 ## Contribution & Development
 
 See [CONTRIBUTING.md](https://github.com/developmentseed/rio-stac/blob/main/CONTRIBUTING.md)

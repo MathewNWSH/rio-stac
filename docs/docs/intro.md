@@ -187,6 +187,27 @@ The CLI can be run as is, just by passing a `source` raster data. You can also u
 
     When creating the GeoJSON geometry from the input dataset we usually take the `bounding box` of the data and construct a simple Polygon which then get reprojected to EPSG:4326. Sadly the world is neither flat and square, so doing a transformation using bounding box can lead to non-ideal result. To get better results and account for nonlinear transformation you can add `points` on each edge of the polygon using `--densify-geom` option.
 
+- **recursive** (-r, --recursive)
+
+    Process input directory recursively. Instead of creating an Item for a single file, `rio-stac` will scan the directory and create one Item containing multiple assets.
+
+    -   The directory name is used as the default Item ID (unless overridden by `--id`).
+    -   Assets are created for found files.
+    -   Smart asset detection rules apply:
+        -   `.json`, `.xml` and `.safe` files are treated as `metadata`.
+        -   3-band rasters without CRS or files with `ql` in name are treated as `thumbnail` (with cleaned properties).
+        -   Other rasters are treated as `data`.
+    -   General STAC best practices are applied:
+        -   `proj:*` properties are moved from the Item level to the Asset level.
+        -   Thumbnails are stripped of spatial/spectral metadata.
+        -   Metadata assets are stripped of spatial metadata.
+
+- **pattern** (--pattern)
+
+    Glob pattern(s) to filter files when using `--recursive`. Can be specified multiple times.
+
+    Example: `rio stac /path/to/dir --recursive --pattern "*.tif" --pattern "*.json"`
+
 ### Example
 
 ```json

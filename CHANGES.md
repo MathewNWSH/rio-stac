@@ -4,6 +4,14 @@
 - replace `proj:epsg` with `proj:code` to align with Projection extension 2.0.0
 - parse JSON values passed via `--property` (e.g. `_private`) and merge them when adding private data; accept lenient JSON with unquoted keys
 - add `--private-property/-P` to set `_private` entries without JSON braces and coerce JSON literals (e.g. `hidden=true`); requires `--with-private-data`
+- add `--recursive/-r` option to CLI to process a directory of files into a single STAC Item with multiple assets
+- add `--pattern` option to CLI to filter files when using `--recursive`
+- add `rio_stac.stac.build_stac_assets` function to creating STAC assets from a list of files or a directory
+- add smart asset role detection: 3-band non-georeferenced images as 'thumbnail', JSON/XML/SAFE as 'metadata', others as 'data'
+- add `antimeridian` dependency to fix Item geometry (split over 180th meridian)
+- update `create_stac_asset` to include `proj:*` fields in asset `extra_fields` when `with_proj=True` (except `proj:geometry`)
+- update `create_stac_item` to remove `proj:*` fields from Item properties if `with_proj=True` (moved to assets)
+- generalize post-processing logic in `create_stac_item` to automatically clean up thumbnail assets (remove spectral/spatial info, set correct roles) and metadata assets (remove proj info) for all items
 
 ## 0.12.0 (2025-09-17)
 
