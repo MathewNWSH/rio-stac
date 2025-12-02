@@ -10,7 +10,7 @@ from pystac import MediaType
 from pystac.utils import datetime_to_str, str_to_datetime
 from rasterio.rio import options
 
-from rio_stac import build_stac_assets, create_stac_asset, create_stac_item
+from rio_stac import build_stac_assets, create_stac_item
 
 
 _UNQUOTED_KEY_RE = re.compile(r'(?P<lead>[{,]\s*)(?P<key>[A-Za-z_][A-Za-z0-9_-]*)\s*:')
@@ -251,7 +251,7 @@ def stac(
                     # asset.href is relative (basename)
                     source = os.path.join(input, asset.href)
                     break
-            
+
             # Fallback to any asset if no data role found (e.g. only thumbnails?)
             # Or fallback to first found
             if not source and assets:
@@ -260,7 +260,7 @@ def stac(
                     if "metadata" not in (asset.roles or []):
                          source = os.path.join(input, asset.href)
                          break
-            
+
             if not source:
                  raise click.ClickException("No valid raster asset found to derive Item geometry.")
 
@@ -313,7 +313,7 @@ def stac(
                 if os.path.isdir(input):
                     raise click.ClickException(
                         f"Input '{input}' is a directory. Did you mean to use `--recursive`?"
-                    )
+                    ) from None
                 raise
 
     if output:

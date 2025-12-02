@@ -412,19 +412,19 @@ def build_stac_assets(
         # Let's use the filename without extension as key, but if collision, maybe append something?
         # For simplicity in this iteration, we keep existing key logic (basename without ext).
         # But we should use relative path for href if 'directory' is set.
-        
+
         if directory and fpath.startswith(directory):
              href = os.path.relpath(fpath, directory)
         else:
              href = os.path.basename(fpath)
 
         # Key generation: robust to collisions?
-        # Simple approach: use filename without extension. 
+        # Simple approach: use filename without extension.
         # If user has multiple files with same name in diff folders, this overwrites.
         # Given the requirement for Sentinel-2 SAFE, usually filenames are unique enough (e.g. with date/tile prefixes).
-        
+
         key = os.path.splitext(os.path.basename(fpath))[0]
-        
+
         # Check for Metadata (JSON/XML/SAFE)
         if fpath.lower().endswith((".json", ".xml", ".safe")):
             mtype = (
@@ -436,7 +436,7 @@ def build_stac_assets(
                 href=href, media_type=mtype, roles=["metadata"]
             )
             continue
-        
+
         # Check for Sentinel-2 Quicklook
         if fpath.lower().endswith("ql.jpg") or fpath.lower().endswith("ql.jpeg"):
              assets[key] = pystac.Asset(
@@ -555,7 +555,7 @@ def create_stac_asset(
                     band.update(raster_bands[idx])
                 band.setdefault("name", f"b{idx + 1}")
                 bands.append(band)
-            
+
             extra_fields["bands"] = bands
 
     return (
@@ -712,7 +712,7 @@ def create_stac_item(
                 histogram_bins=histogram_bins,
                 histogram_range=histogram_range,
             )
-    
+
     # Fix Antimeridian
     fixed_geom = antimeridian.fix_geojson(dataset_geom["footprint"])
     fixed_bbox = list(feature_bounds(fixed_geom))
@@ -763,13 +763,13 @@ def create_stac_item(
         if "thumbnail" in (asset.roles or []) or key.endswith("ql") or "-ql" in key:
             thumb_key = key
             break
-            
+
     if thumb_key:
         thumb = item.assets.pop(thumb_key)
         # Set required
         thumb.title = "thumbnail"
         thumb.description = "thumbnail"
-        
+
         # Ensure roles
         if not thumb.roles:
              thumb.roles = ["thumbnail", "overview"]
@@ -778,25 +778,25 @@ def create_stac_item(
                  thumb.roles.append("thumbnail")
              if "overview" not in thumb.roles:
                  thumb.roles.append("overview")
-        
+
         thumb.extra_fields["proj:code"] = None
-        
+
         # Remove forbidden fields
-        for k in ["bands", "eo:bands", "raster:bands", "statistics", "stats", 
-                  "proj:epsg", "proj:shape", "proj:bbox", "proj:transform", 
+        for k in ["bands", "eo:bands", "raster:bands", "statistics", "stats",
+                  "proj:epsg", "proj:shape", "proj:bbox", "proj:transform",
                   "proj:geometry", "proj:wkt2", "proj:projjson"]:
             thumb.extra_fields.pop(k, None)
-            
+
         # Check if they are in extra_fields keys (e.g. other proj: fields)
         keys_to_pop = [ek for ek in thumb.extra_fields if ek.startswith("proj:") and ek != "proj:code"]
         for ek in keys_to_pop:
             thumb.extra_fields.pop(ek)
-            
+
         # Re-add as 'thumbnail'
         item.assets["thumbnail"] = thumb
 
     # 2. Clean Metadata Assets (No proj:*)
-    for key, asset in item.assets.items():
+    for _, asset in item.assets.items():
         if "metadata" in (asset.roles or []):
              keys_to_pop = [k for k in asset.extra_fields if k.startswith("proj:")]
              for k in keys_to_pop:

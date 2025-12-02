@@ -1,9 +1,9 @@
+"""Tests for CLI directory processing."""
 import json
 import os
 import shutil
 from click.testing import CliRunner
 from rio_stac.scripts.cli import stac
-import rasterio
 import pytest
 
 @pytest.fixture
@@ -55,12 +55,12 @@ def test_cli_recursive_basic(test_dir):
     
     assert item["id"] == "data"
     assert "image" in item["assets"]
-    assert "thumb" in item["assets"]
+    assert "thumbnail" in item["assets"]
     assert "meta" in item["assets"]
     
     # Check roles
     assert "data" in item["assets"]["image"]["roles"]
-    assert "thumbnail" in item["assets"]["thumb"]["roles"]
+    assert "thumbnail" in item["assets"]["thumbnail"]["roles"]
     assert "metadata" in item["assets"]["meta"]["roles"]
 
 def test_cli_recursive_pattern(test_dir):
@@ -72,7 +72,7 @@ def test_cli_recursive_pattern(test_dir):
     item = json.loads(result.output)
     
     assert "image" in item["assets"]
-    assert "thumb" not in item["assets"]
+    assert "thumbnail" not in item["assets"]
     assert "meta" not in item["assets"]
 
 def test_cli_recursive_multiple_patterns(test_dir):
@@ -84,7 +84,7 @@ def test_cli_recursive_multiple_patterns(test_dir):
     
     assert "image" in item["assets"]
     assert "meta" in item["assets"]
-    assert "thumb" not in item["assets"]
+    assert "thumbnail" not in item["assets"]
 
 def test_cli_directory_without_recursive(test_dir):
     """Test error when providing directory without --recursive."""
@@ -102,3 +102,26 @@ def test_cli_recursive_no_files(tmp_path):
     result = runner.invoke(stac, [str(d), "--recursive"])
     assert result.exit_code != 0
     assert "No valid files found" in result.output
+
+def test_cli_recursive_private_data(test_dir):
+    """Test recursive directory processing with private data addition."""
+    runner = CliRunner()
+    cmd = [
+        str(test_dir), 
+        "--recursive", 
+        "--with-private-data", 
+        "--private-property", "hidden=true",
+        "--private-property", "note='secret'"
+    ]
+    result = runner.invoke(stac, cmd)
+    assert result.exit_code == 0
+    item = json.loads(result.output)
+    
+    assert item["id"] == "data"
+    assert "image" in item["assets"]
+    
+    # Check private properties
+    assert "_private" in item["properties"]
+    private = item["properties"]["_private"]
+    assert private["hidden"] is True
+    assert private["note"] == "secret"
