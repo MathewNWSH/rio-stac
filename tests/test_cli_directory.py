@@ -125,3 +125,36 @@ def test_cli_recursive_private_data(test_dir):
     private = item["properties"]["_private"]
     assert private["hidden"] is True
     assert private["note"] == "secret"
+
+def test_cli_recursive_private_data_implicit(test_dir):
+    """Test that with_private is implicit when private properties are passed."""
+    runner = CliRunner()
+    # Case 1: Using -P should implicitly enable private data
+    cmd1 = [
+        str(test_dir), 
+        "--recursive", 
+        "--private-property", "hidden=true",
+    ]
+    result1 = runner.invoke(stac, cmd1)
+    assert result1.exit_code == 0
+    item1 = json.loads(result1.output)
+    assert "_private" in item1["properties"]
+    assert item1["properties"]["_private"]["hidden"] is True
+
+    # Case 2: Using -p _private=... should implicitly enable private data and merge
+    cmd2 = [
+        str(test_dir), 
+        "--recursive", 
+        "-p", "_private={'note': 'secret'}",
+        "-p", "_private={'user': 'me'}",
+    ]
+    result2 = runner.invoke(stac, cmd2)
+    assert result2.exit_code == 0
+    item2 = json.loads(result2.output)
+    assert "_private" in item2["properties"]
+    private = item2["properties"]["_private"]
+    # Check implicit enable
+    assert "hidden" in private # Default is True if with_private is enabled
+    # Check merging
+    assert private["note"] == "secret"
+    assert private["user"] == "me"

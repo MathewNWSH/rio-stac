@@ -390,11 +390,22 @@ def build_stac_assets(
     filtered_files = []
     if patterns:
         for f in files:
-            dirname, filename = os.path.split(f)
+            matched = False
+            rel_path = os.path.relpath(f, directory) if directory else f
+            filename = os.path.basename(f)
+            
             for pattern in patterns:
-                if fnmatch.fnmatch(filename, pattern):
-                    filtered_files.append(f)
-                    break
+                if "/" in pattern or os.sep in pattern:
+                    if fnmatch.fnmatch(rel_path, pattern):
+                        matched = True
+                        break
+                else:
+                    if fnmatch.fnmatch(filename, pattern):
+                        matched = True
+                        break
+            
+            if matched:
+                filtered_files.append(f)
     else:
         filtered_files = files
 
@@ -402,26 +413,10 @@ def build_stac_assets(
         if not os.path.isfile(fpath):
             continue
 
-        # For recursive directory scan, we want relative paths from the input directory
-        # if possible, or just basename.
-        # If 'directory' was provided, we can try to make the href relative to it?
-        # But standard rio stac usage usually puts just basename if flat.
-        # If recursive, we probably want relative path to preserve structure?
-        # Or just basename as key? Keys must be unique.
-        # If we have data/A.tif and data/nested/A.tif, we have a collision on key "A".
-        # Let's use the filename without extension as key, but if collision, maybe append something?
-        # For simplicity in this iteration, we keep existing key logic (basename without ext).
-        # But we should use relative path for href if 'directory' is set.
-
         if directory and fpath.startswith(directory):
              href = os.path.relpath(fpath, directory)
         else:
              href = os.path.basename(fpath)
-
-        # Key generation: robust to collisions?
-        # Simple approach: use filename without extension.
-        # If user has multiple files with same name in diff folders, this overwrites.
-        # Given the requirement for Sentinel-2 SAFE, usually filenames are unique enough (e.g. with date/tile prefixes).
 
         key = os.path.splitext(os.path.basename(fpath))[0]
 
@@ -674,11 +669,6 @@ def create_stac_item(
             extensions.append(
                 f"https://stac-extensions.github.io/projection/{PROJECTION_EXT_VERSION}/schema.json",
             )
-            # We don't add proj properties to Item properties anymore (best practice: on Assets)
-            # properties.update({
-            #     f"proj:{name}": value
-            #     for name, value in get_projection_info(src_dst).items()
-            # })
 
         # Check if we need to add other extensions
         if with_raster:

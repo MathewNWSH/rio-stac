@@ -45,7 +45,10 @@ def _cb_key_val(ctx, param, value):
             else:
                 k, v = pair.split("=", 1)
                 parsed = _parse_jsonish(v)
-                out[k] = parsed
+                if k in out and isinstance(out[k], dict) and isinstance(parsed, dict):
+                    out[k].update(parsed)
+                else:
+                    out[k] = parsed
         return out
 
 
@@ -122,7 +125,7 @@ def _cb_key_val(ctx, param, value):
     "--with-private-data/--without-private-data",
     "with_private",
     default=False,
-    help="Add the '_private' entry to output item.",
+    help="Add the '_private' entry to output item. Implicitly enabled if -P or -p _private=... is used.",
     show_default=False,
 )
 @click.option(
@@ -194,13 +197,14 @@ def stac(
     private_property = private_property or {}
     densify_geom = densify_geom or 0
 
+    if "_private" in property:
+        with_private = True
+
+    if private_property:
+        with_private = True
+
     if "_private" in property and not isinstance(property["_private"], dict):
         raise click.BadParameter("When provided, '_private' must be a JSON object.")
-
-    if private_property and not with_private:
-        raise click.BadParameter(
-            "Using --private-property requires --with-private-data to be enabled."
-        )
 
     if with_private:
         base_private = property.get("_private") or {}

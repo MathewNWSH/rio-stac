@@ -1,7 +1,20 @@
 
-`rio-stac` can be used either from the command line as a rasterio plugin (`rio stac`) or from your own script.
+`rio-stac` is a simple [rasterio](https://github.com/mapbox/rasterio) plugin for creating valid STAC items from a raster dataset. The library is built on top of [pystac](https://github.com/stac-utils/pystac) to make sure we follow the STAC specification.
 
-For more information about the `Item` specification, please see https://github.com/radiantearth/stac-spec/blob/master/item-spec/item-spec.md
+## Installation
+
+We recommend using [uv](https://github.com/astral-sh/uv) for installation:
+
+```bash
+$ uv pip install rio-stac
+```
+
+Or with standard pip:
+
+```bash
+$ pip install pip -U
+$ pip install rio-stac
+```
 
 # CLI
 
